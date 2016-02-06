@@ -1,0 +1,156 @@
+<!doctype html>
+<html>
+<head>
+<style>
+  body, html {
+    margin: 0;
+    padding: 0;
+  }
+  #board-container {
+    margin: 50px
+  }
+  #board {
+
+    position: relative;
+  }
+  .cell {
+    position: absolute;
+    background-color: rgba(255, 0, 0, 0.2);
+    border: 1px solid white;
+  }
+  .cell.active {
+    background-color: rgba(56, 34, 93, 0.8);
+  }
+</style>
+<script>
+(function() {
+  var boardSize = 20;
+  var cellSize = 30; //px
+
+  var snake = [];
+  var direction = 'left';
+
+  var isSnakeValid = function() {
+    var result = true;
+    snake.forEach(function(position) {
+      if (position[0] < 0 || position[0] > boardSize-1) {
+        result = false;
+      }
+      if (position[1] < 0 || position[1] > boardSize-1) {
+        result = false;
+      }
+    });
+    return result;
+  }
+
+  var randomBoardPosition = function() {
+    var x = parseInt(boardSize * Math.random(), 10);
+    var y = parseInt(boardSize * Math.random(), 10);
+    return [x, y];
+  }
+
+  var seedSnakePosition = function() {
+    snake.push(randomBoardPosition())
+  }
+
+  var growSnake = function() {
+    var lastPosition = snake[snake.length-1];
+    var newX = lastPosition[0];
+    var newY = lastPosition[1];
+    if (direction === 'up') {
+      newY -= 1;
+    }
+    if (direction === 'left') {
+      newX -= 1;
+    }
+    if (direction === 'right') {
+      newX += 1;
+    }
+    if (direction === 'down') {
+      newY += 1;
+    }
+    snake.push([newX, newY]);
+  }
+
+  var randomizeDirection = function() {
+    var r = Math.random();
+    if (r < 0.25) {
+      direction = 'left'
+    } else if ( r >= 0.25 && r < 0.50) {
+      direction = 'down'
+    } else if (r >= 0.50 && r < 0.75) {
+      direction = 'right'
+    } else {
+      direction = 'up'
+    }
+  }
+
+  var render = function() {
+
+    // this is totally inefficent
+    var cells = Array.prototype.slice.call(document.querySelectorAll('.cell'), 0);
+    cells.forEach(function(el) {
+      el.className = "cell";
+    });
+
+    cells.forEach(function(el) {
+      var cellX = parseInt(el.getAttribute('data-x'), 10);
+      var cellY = parseInt(el.getAttribute('data-y'), 10);
+      snake.forEach(function(snakeCell) {
+        if (snakeCell[0] == cellX && snakeCell[1] == cellY) {
+          el.className = "cell active";
+        }
+      });
+    });
+    requestAnimationFrame(render);
+  }
+
+  var verifyBoard = function() {
+    if (isSnakeValid() === false) {
+      console.log('lose')
+      snake = [];
+      seedSnakePosition();
+    }
+    requestAnimationFrame(verifyBoard);
+  }
+
+  var addCell = function(x, y) {
+    var boardEl = document.getElementById('board');
+    var el = document.createElement('div');
+    el.className = 'cell';
+    el.style.left = x * cellSize + 'px';
+    el.style.top  = y * cellSize + 'px';
+    el.style.width = cellSize + 'px';
+    el.style.height = cellSize + 'px';
+    el.setAttribute('data-x', x);
+    el.setAttribute('data-y', y);
+    boardEl.appendChild(el);
+  }
+  window.boot = function() {
+    // create <div> per cell
+    for (x=0; x<boardSize; x++) {
+      for (y=0; y<boardSize; y++) {
+        addCell(x, y);
+      }
+    }
+    // seed random position
+    seedSnakePosition();
+
+    // start main loop
+    render();
+    verifyBoard();
+
+    setInterval(growSnake, 10);
+
+    setInterval(randomizeDirection, 10);
+  }
+})();
+window.onload = boot;
+</script>
+</head>
+<body>
+<div id="board-container">
+  <div id="board"></div>
+</div>
+</body>
+</html>
